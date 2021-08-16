@@ -1,21 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Container } from 'semantic-ui-react';
-import { Activity } from '../models/activity';
 import { NavBar } from './NavBar';
-import { ActivityDashboard } from '../../Features/activities/dashboard/ActivityDashboard';
-import { v4 as uuid } from 'uuid';
-import agent from '../api/agent';
+import ActivityDashboard from '../../Features/activities/dashboard/ActivityDashboard';
 import LoadingComponent from './LoadingComponent';
+import { useStore } from '../stores/store';
+import { observer } from 'mobx-react-lite';
 
 function App() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [SelectedActivity, setSelectedActitity] = useState<Activity | undefined>(undefined);
-  const [editMode, setEditmode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+
+  const { activityStore } = useStore();
 
   useEffect(() => {
-    agent.Activities.list().then(response => {
+    activityStore.loadActivities();
+  }, [activityStore]);
+
+  if (activityStore.loadingInitial) return <LoadingComponent content='Loading app' />
+
+  return (
+    <>
+      <NavBar />
+      <Container style={{ marginTop: '7em' }}>
+
+        <ActivityDashboard />
+      </Container>
+    </ >
+  );
+}
+export default observer(App);
+
+
+
+
+/*
+Loading list of activities
+
+agent.Activities.list().then(response => {
       let activities: Activity[] = [];
 
       response.forEach(activity => {
@@ -25,9 +44,9 @@ function App() {
       setActivities(activities);
       setLoading(false);
     })
-  }, []);
 
-  const handleSelectActivity = (id: string) => {
+
+     const handleSelectActivity = (id: string) => {
     setSelectedActitity(activities.find(x => x.id === id));
   }
 
@@ -47,7 +66,11 @@ function App() {
     setEditmode(false);
   }
 
-  const handleCreateOrEditActivity = (activity: Activity) => {
+
+    const [SelectedActivity, setSelectedActitity] = useState<Activity | undefined>(undefined);
+  const [editMode, setEditmode] = useState(false);
+
+    const handleCreateOrEditActivity = (activity: Activity) => {
     setSubmitting(true);
 
     if (activity.id) {
@@ -67,42 +90,13 @@ function App() {
         setSubmitting(false);
       })
     }
-
-    /*
-    activity.id ? setActivities([...activities.filter(x => x.id !== activity.id), activity]) : setActivities([...activities, { ...activity, id: uuid() }]);
-    setEditmode(false);
-    setSelectedActitity(activity);
-    */
   }
 
-  const handleDeleteActivity = (id: string) => {
+    const handleDeleteActivity = (id: string) => {
     setSubmitting(true);
     agent.Activities.delete(id).then(() => {
       setActivities([...activities.filter(x => x.id !== id)]);
       setSubmitting(false);
     })
   }
-
-  if (loading) return <LoadingComponent content='Loading app' />
-
-  return (
-    <>
-      <NavBar formOpen={handleForOpen} />
-      <Container style={{ marginTop: '7em' }}>
-        <ActivityDashboard
-          activities={activities}
-          selectedActivity={SelectedActivity}
-          handleSelectActivity={handleSelectActivity}
-          handleCancelActivity={handleCancelActivity}
-          editMode={editMode}
-          openForm={handleForOpen}
-          closeForm={handleFormClose}
-          createOrEdit={handleCreateOrEditActivity}
-          deleteActivity={handleDeleteActivity}
-          submitting={submitting}
-        />
-      </Container>
-    </ >
-  );
-}
-export default App;
+*/
